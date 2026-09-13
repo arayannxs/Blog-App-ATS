@@ -14,28 +14,38 @@ import {
 } from "../../services/cloudinary.service";
 
 export class PostsController {
+
+  // CREATE
   createPost = async (req: Request, res: Response) => {
     try {
-      // 1. validation
+
+      // 1. Validation
       const validatedData = createPostSchema.parse(req.body);
       const { userId, title, content, categoryId } = validatedData;
       let imageUrl: string | undefined;
       let imagePublicId: string | undefined;
+
       // 2. Jika ada file yang di-upload, kirim ke Cloudinary
       if (req.file) {
         const uploadResult = await uploadToCloudinary(req.file.buffer);
         imageUrl = uploadResult.secure_url;
         imagePublicId = uploadResult.public_id;
       }
+
       // 3. Create New Post
       const [insertedPost] = await db
         .insert(postsTable)
         .values({ userId, title, content, imageUrl, imagePublicId, categoryId })
         .$returningId();
-      // 4. Ambil Post yg baru di buat tadi
+
+      // 4. Ambil Post yang baru dibuat + include relasi category
       const newPost = await db.query.postsTable.findFirst({
         where: eq(postsTable.id, insertedPost.id),
+        with: {
+          category: true, // Menyertakan relasi category
+        },
       });
+      
       // 5. Tampilkan dalam API
       return res.status(201).json({
         success: true,
@@ -58,11 +68,13 @@ export class PostsController {
   // GUEST : Get Posts
   getPosts = async (req: Request, res: Response) => {
     try {
-      const posts = await db
-        .select()
-        .from(postsTable)
-        .where(eq(postsTable.status, "published"))
-        .orderBy(desc(postsTable.createdAt));
+      const posts = await db.query.postsTable.findMany({
+      where: eq(postsTable.status, "published"),
+      orderBy: [desc(postsTable.createdAt)],
+      with: {
+        category: true, // Menyertakan relasi objek category
+      },
+    });
 
       return res.status(200).json({
         success: true,
@@ -87,10 +99,12 @@ export class PostsController {
       const validatedParams = postIdSchema.parse(req.params);
       const { id } = validatedParams;
 
-      const [post] = await db
-        .select()
-        .from(postsTable)
-        .where(and(eq(postsTable.id, id), eq(postsTable.status, "published")));
+      const post = await db.query.postsTable.findFirst({
+      where: eq(postsTable.id, Number(id)),
+      with: {
+        category: true,
+      },
+    });
 
       if (!post) {
         return res.status(404).json({
@@ -134,10 +148,9 @@ export class PostsController {
       // =====================================
       // 3. CHECK POST
       // =====================================
-      const [existingPost] = await db
-        .select()
-        .from(postsTable)
-        .where(eq(postsTable.id, id));
+      const existingPost = await db.query.postsTable.findFirst({
+        where: eq(postsTable.id, id),
+      });
 
       if (!existingPost) {
         return res.status(404).json({
@@ -157,7 +170,6 @@ export class PostsController {
       // =====================================
       if (req.file) {
         const uploadResult = await uploadToCloudinary(req.file.buffer);
-
         imageUrl = uploadResult.secure_url;
         imagePublicId = uploadResult.public_id;
 
@@ -182,12 +194,14 @@ export class PostsController {
         .where(eq(postsTable.id, id));
 
       // =====================================
-      // 7. AMBIL DATA TERBARU
+      // 7. AMBIL DATA TERBARU + INCLUDE RELASI CATEGORY
       // =====================================
-      const [updatedPost] = await db
-        .select()
-        .from(postsTable)
-        .where(eq(postsTable.id, id));
+      const updatedPost = await db.query.postsTable.findFirst({
+        where: eq(postsTable.id, id),
+        with: {
+          category: true, // Relasi category disertakan
+        },
+      });
 
       // =====================================
       // 8. RESPONSE
@@ -252,7 +266,7 @@ export class PostsController {
       return res.status(500).json({
         success: false,
         message: "Internal server error",
-        error: error.message,
+        error: error instanceof Error ? error.message : error,
       });
     }
   };
