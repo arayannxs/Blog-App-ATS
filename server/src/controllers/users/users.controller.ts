@@ -15,16 +15,16 @@ export class UsersController {
 
       const { userId } = validatedParams;
 
-      const posts = await db
-        .select()
-        .from(postsTable)
-        .where(
-          and(
-            eq(postsTable.userId, userId),
-            eq(postsTable.status, "published"),
-          ),
-        )
-        .orderBy(desc(postsTable.createdAt));
+      const posts = await db.query.postsTable.findMany({
+        where: and(
+          eq(postsTable.userId, Number(userId)),
+          eq(postsTable.status, "published"),
+        ),
+        orderBy: [desc(postsTable.createdAt)],
+        with: {
+          category: true,
+        },
+      });
 
       return res.status(200).json({
         success: true,
@@ -44,16 +44,16 @@ export class UsersController {
       const validatedParams = userPostParamsSchema.parse(req.params);
       const { userId, postId } = validatedParams;
 
-      const [post] = await db
-        .select()
-        .from(postsTable)
-        .where(
-          and(
-            eq(postsTable.id, postId),
-            eq(postsTable.userId, userId),
-            eq(postsTable.status, "published"),
-          ),
-        );
+      const post = await db.query.postsTable.findFirst({
+      where: and(
+        eq(postsTable.id, postId),
+        eq(postsTable.userId, userId),
+        eq(postsTable.status, "published")
+      ),
+      with: {
+        category: true,
+      },
+    });
 
       if (!post) {
         return res.status(404).json({
@@ -75,10 +75,10 @@ export class UsersController {
       return res.status(500).json({
         success: false,
         message: "Internal server error",
-        error: error.message
+        error: error.message,
       });
     }
-  }
+  };
 }
 
 export default new UsersController();
