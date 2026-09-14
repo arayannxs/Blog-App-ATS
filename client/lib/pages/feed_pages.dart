@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../services/post_service.dart';
-
+import '../models/post_model.dart';
+import 'create_post_pages.dart';
 
 class FeedPage extends StatefulWidget {
   const FeedPage({super.key});
@@ -11,7 +12,7 @@ class FeedPage extends StatefulWidget {
 }
 
 class _FeedPageState extends State<FeedPage> {
-  late Future<List<dynamic>> _postsFuture;
+  late Future<List<Post>> _postsFuture;
 
   @override
   void initState() {
@@ -102,7 +103,7 @@ class _FeedPageState extends State<FeedPage> {
               const SizedBox(height: 12),
 
               // 4. DAFTAR FEED / BUKU (DINAMIS DARI API)
-              FutureBuilder<List<dynamic>>(
+              FutureBuilder<List<Post>>(
                 future: _postsFuture,
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
@@ -155,7 +156,7 @@ class _FeedPageState extends State<FeedPage> {
                             child: const Icon(Icons.menu_book, color: Color(0xFF003875)),
                           ),
                           title: Text(
-                            item['title'] ?? 'Tanpa Judul', // Dynamic Title
+                            item.title, // Dynamic Title
                             style: textStyleWorkSans.copyWith(
                               fontWeight: FontWeight.bold,
                               fontSize: 14,
@@ -166,7 +167,7 @@ class _FeedPageState extends State<FeedPage> {
                             children: [
                               const SizedBox(height: 4),
                               Text(
-                                item['content'] ?? 'Koleksi Digital Perpustakaan Utama', // Dynamic Content
+                                item.content, // Dynamic Content
                                 style: textStyleWorkSans.copyWith(fontSize: 12),
                                 maxLines: 2,
                                 overflow: TextOverflow.ellipsis,
@@ -202,19 +203,24 @@ class _FeedPageState extends State<FeedPage> {
         ),
       ),
       // 5. TOMBOL TAMBAH BUKU BARU (FLOATING ACTION BUTTON)
-      // floatingActionButton: FloatingActionButton(
-      //   backgroundColor: const Color(0xFF003875),
-      //   onPressed: () async {
-      //     final refreshed = await Navigator.push(
-      //       context,
-      //       MaterialPageRoute(builder: (context) => const CreatePostPage()),
-      //     );
-      //     if (refreshed == true) {
-      //       _fetchPosts(); // Refresh list otomatis setelah insert berhasil
-      //     }
-      //   },
-      //   child: const Icon(Icons.add, color: Colors.white),
-      // ),
+      floatingActionButton: FloatingActionButton(
+        backgroundColor: const Color(0xFF003875),
+        onPressed: () async {
+          // Pindah ke halaman CreatePostPage
+          final refreshed = await Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const CreatePostPage(),
+            ),
+          );
+
+          // Jika berhasil submit (mengembalikan true), refresh daftar postingan
+          if (refreshed == true) {
+            _fetchPosts(); // Refresh list otomatis setelah insert berhasil
+          }
+        },
+        child: const Icon(Icons.add, color: Colors.white),
+      ),
     );
   }
 }
