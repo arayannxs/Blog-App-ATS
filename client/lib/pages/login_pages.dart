@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../services/auth_service.dart';
+import '../services/auth_service.dart'; // Impor AuthService untuk login
 import 'register_pages.dart'; // Impor register_pages untuk navigasi
+import 'feed_pages.dart'; // Impor feed_pages untuk navigasi setelah login berhasil
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -12,9 +13,9 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
-  final _emailController = TextEditingController(); // Tetap pakai email controller
+  final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  bool _obscurePassword = true; // State untuk ikon mata
+  bool _obscurePassword = true;
   bool _isLoading = false;
 
   void _handleLogin() async {
@@ -36,15 +37,34 @@ class _LoginPageState extends State<LoginPage> {
 
     if (result['success']) {
       final prefs = await SharedPreferences.getInstance();
-      await prefs.setString('token', result['data']['token'] ?? '');
-      await prefs.setString('userId', result['data']['user']['id'].toString());
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Login Berhasil!')),
+      // 1. Ambil token & userId secara aman (pake null check ??)
+      final data = result['data'];
+      final token = data?['token']?.toString() ?? '';
+
+      // Cek apakah 'user' ada atau langsung 'userId' / 'id' dari data
+      final userId =
+          data?['user']?['id']?.toString() ?? data?['id']?.toString() ?? '';
+
+      // 2. Simpan ke SharedPreferences
+      await prefs.setString('token', token);
+      await prefs.setString('userId', userId);
+
+      if (!mounted) return;
+
+      // 3. Tampilkan pesan sukses
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Login Berhasil!')));
+
+      // 4. Pindah ke FeedPage
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (context) => const FeedPage()),
+        (route) => false,
       );
-      // Navigasi ke HomePage (belum dibuat, jadi dipending dulu)
-      // Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const HomePage()));
     } else {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(result['message'] ?? 'Login Gagal')),
       );
@@ -74,7 +94,8 @@ class _LoginPageState extends State<LoginPage> {
         child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 32.0),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start, // Ratakan teks label ke kiri
+            crossAxisAlignment:
+                CrossAxisAlignment.start, // Ratakan teks label ke kiri
             children: [
               const SizedBox(height: 50),
               // Ikon Kembali
@@ -82,7 +103,11 @@ class _LoginPageState extends State<LoginPage> {
                 onPressed: () {
                   Navigator.pop(context);
                 },
-                icon: const Icon(Icons.arrow_back, color: Colors.white, size: 30),
+                icon: const Icon(
+                  Icons.arrow_back,
+                  color: Colors.white,
+                  size: 30,
+                ),
                 padding: EdgeInsets.zero,
                 constraints: const BoxConstraints(),
               ),
@@ -124,9 +149,12 @@ class _LoginPageState extends State<LoginPage> {
                 decoration: InputDecoration(
                   filled: true,
                   fillColor: Colors.white,
-                  hintText: 'Masukkan Username....', // Teks placeholder
+                  hintText: 'Masukkan Email....', // Teks placeholder
                   hintStyle: const TextStyle(color: Colors.grey),
-                  prefixIcon: const Icon(Icons.person_outline, color: Colors.grey),
+                  prefixIcon: const Icon(
+                    Icons.person_outline,
+                    color: Colors.grey,
+                  ),
                   contentPadding: const EdgeInsets.all(18),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(10),
@@ -155,7 +183,10 @@ class _LoginPageState extends State<LoginPage> {
                   fillColor: Colors.white,
                   hintText: '• • • • • • • •', // Teks placeholder password
                   hintStyle: const TextStyle(color: Colors.grey, fontSize: 18),
-                  prefixIcon: const Icon(Icons.lock_outline, color: Colors.grey),
+                  prefixIcon: const Icon(
+                    Icons.lock_outline,
+                    color: Colors.grey,
+                  ),
                   suffixIcon: IconButton(
                     onPressed: () {
                       setState(() {
@@ -163,7 +194,9 @@ class _LoginPageState extends State<LoginPage> {
                       });
                     },
                     icon: Icon(
-                      _obscurePassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                      _obscurePassword
+                          ? Icons.visibility_off_outlined
+                          : Icons.visibility_outlined,
                       color: Colors.grey,
                     ),
                   ),
@@ -181,7 +214,7 @@ class _LoginPageState extends State<LoginPage> {
                 child: _isLoading
                     ? const CircularProgressIndicator(color: Colors.white)
                     : Container(
-                        width: 250, // Sesuaikan lebar tombol
+                        width: 250,
                         height: 50,
                         decoration: BoxDecoration(
                           gradient: const LinearGradient(
@@ -222,7 +255,9 @@ class _LoginPageState extends State<LoginPage> {
                     // Pindah ke halaman Register
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (context) => const RegisterPage()),
+                      MaterialPageRoute(
+                        builder: (context) => const RegisterPage(),
+                      ),
                     );
                   },
                   child: Text(
