@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 class AuthService {
-  // Base URL penampung alamat utama API Auth Express (10.0.2.2 khusus Android Emulator)
+  // Base URL penampung alamat utama API Auth Express
   final String baseUrl = 'http://localhost:5000/api/v1/auth';
 
   // Function Login
@@ -25,7 +25,6 @@ class AuthService {
       return {'success': false, 'message': 'Gagal terhubung ke server: $e'};
     }
   }
-
 
   // Function Register
   Future<Map<String, dynamic>> register(
