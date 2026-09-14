@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../services/auth_service.dart';
+import 'register_pages.dart'; // Impor register_pages untuk navigasi
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -9,69 +12,232 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
-  final TextEditingController _emailController = TextEditingController();
-  final TextEditingController _passwordController = TextEditingController();
+  final _emailController = TextEditingController(); // Tetap pakai email controller
+  final _passwordController = TextEditingController();
+  bool _obscurePassword = true; // State untuk ikon mata
   bool _isLoading = false;
 
   void _handleLogin() async {
-    String email = _emailController.text.trim();
-    String password = _passwordController.text.trim();
-
-    if (email.isEmpty || password.isEmpty) {
+    if (_emailController.text.isEmpty || _passwordController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Email dan password tidak boleh kosong!')),
+        const SnackBar(content: Text('Email dan password wajib diisi')),
       );
       return;
     }
 
-    setState(() {
-      _isLoading = true;
-    });
+    setState(() => _isLoading = true);
 
-    final result = await AuthService().login(email, password);
+    final result = await AuthService().login(
+      _emailController.text,
+      _passwordController.text,
+    );
 
-    if (!mounted) return;
-
-    setState(() {
-      _isLoading = false;
-    });
+    setState(() => _isLoading = false);
 
     if (result['success']) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Login Berhasil!')));
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('token', result['data']['token'] ?? '');
+      await prefs.setString('userId', result['data']['user']['id'].toString());
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Login Berhasil!')),
+      );
+      // Navigasi ke HomePage (belum dibuat, jadi dipending dulu)
+      // Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const HomePage()));
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(result['message'] ?? 'Login gagal')),
+        SnackBar(content: Text(result['message'] ?? 'Login Gagal')),
       );
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    // Style teks Google Fonts Work Sans
+    final textStyleWorkSans = GoogleFonts.workSans(color: Colors.white);
+
     return Scaffold(
-      appBar: AppBar(title: const Text('Login')),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            TextField(
-              controller: _emailController,
-              decoration: const InputDecoration(labelText: 'Email'),
-            ),
-            TextField(
-              controller: _passwordController,
-              obscureText: true,
-              decoration: const InputDecoration(labelText: 'Password'),
-            ),
-            const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: _isLoading ? null : _handleLogin,
-              child: _isLoading
-                  ? const CircularProgressIndicator()
-                  : const Text('Login'),
-            ),
-          ],
+      body: Container(
+        width: double.infinity,
+        height: double.infinity,
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Color(0xFF0066FF), // Biru terang atas
+              Color(0xFF003366), // Biru tengah pekat
+              Color(0xFF001F3F), // Biru gelap bawah
+            ],
+          ),
+        ),
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 32.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start, // Ratakan teks label ke kiri
+            children: [
+              const SizedBox(height: 50),
+              // Ikon Kembali
+              IconButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+                icon: const Icon(Icons.arrow_back, color: Colors.white, size: 30),
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
+              ),
+              const SizedBox(height: 10),
+              // Logo
+              Center(
+                child: Image.asset(
+                  'assets/images/libsmart_logo.png',
+                  width: 320,
+                  fit: BoxFit.contain,
+                ),
+              ),
+              const SizedBox(height: 10),
+              // Teks Sapaan
+              Center(
+                child: Text(
+                  'Selamat Datang di LIBSMART APP!',
+                  style: textStyleWorkSans.copyWith(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 40),
+
+              // LABEL EMAIL
+              Text(
+                'Email:',
+                style: textStyleWorkSans.copyWith(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: 8),
+              // INPUT EMAIL (Username placeholder di gambar)
+              TextField(
+                controller: _emailController,
+                style: const TextStyle(color: Colors.black), // Teks input hitam
+                decoration: InputDecoration(
+                  filled: true,
+                  fillColor: Colors.white,
+                  hintText: 'Masukkan Username....', // Teks placeholder
+                  hintStyle: const TextStyle(color: Colors.grey),
+                  prefixIcon: const Icon(Icons.person_outline, color: Colors.grey),
+                  contentPadding: const EdgeInsets.all(18),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide: BorderSide.none,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+
+              // LABEL PASSWORD
+              Text(
+                'Password:',
+                style: textStyleWorkSans.copyWith(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: 8),
+              // INPUT PASSWORD
+              TextField(
+                controller: _passwordController,
+                obscureText: _obscurePassword,
+                style: const TextStyle(color: Colors.black),
+                decoration: InputDecoration(
+                  filled: true,
+                  fillColor: Colors.white,
+                  hintText: '• • • • • • • •', // Teks placeholder password
+                  hintStyle: const TextStyle(color: Colors.grey, fontSize: 18),
+                  prefixIcon: const Icon(Icons.lock_outline, color: Colors.grey),
+                  suffixIcon: IconButton(
+                    onPressed: () {
+                      setState(() {
+                        _obscurePassword = !_obscurePassword;
+                      });
+                    },
+                    icon: Icon(
+                      _obscurePassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                      color: Colors.grey,
+                    ),
+                  ),
+                  contentPadding: const EdgeInsets.all(18),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide: BorderSide.none,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 40),
+
+              // TOMBOL LOG IN (Gradient Gold)
+              Center(
+                child: _isLoading
+                    ? const CircularProgressIndicator(color: Colors.white)
+                    : Container(
+                        width: 250, // Sesuaikan lebar tombol
+                        height: 50,
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(
+                            colors: [
+                              Color(0xFFB58931), // Gold gelap kiri
+                              Color(0xFFE9C874), // Gold terang tengah
+                              Color(0xFFB58931), // Gold gelap kanan
+                            ],
+                          ),
+                          borderRadius: BorderRadius.circular(25),
+                        ),
+                        child: ElevatedButton(
+                          onPressed: _handleLogin,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.transparent,
+                            shadowColor: Colors.transparent,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(25),
+                            ),
+                          ),
+                          child: Text(
+                            'Log In',
+                            style: GoogleFonts.workSans(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                      ),
+              ),
+              const SizedBox(height: 20),
+
+              // TEKS NAVIGASI KE REGISTER
+              Center(
+                child: TextButton(
+                  onPressed: () {
+                    // Pindah ke halaman Register
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => const RegisterPage()),
+                    );
+                  },
+                  child: Text(
+                    'Belum Punya Akun? Register',
+                    style: GoogleFonts.workSans(
+                      fontSize: 14,
+                      color: Colors.white,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 30),
+            ],
+          ),
         ),
       ),
     );
