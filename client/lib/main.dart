@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'login_register_page.dart'; // Mengambil halaman login dari file yang sudah kamu ubah nama tadi
+import 'pages/login_pages.dart';
 
 void main() {
   runApp(const MyApp());
@@ -10,9 +10,13 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
+    return MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: LoginScreen(), // Menjadikan LoginScreen sebagai halaman pertama saat aplikasi dibuka
+      title: 'Blog App ATS',
+      theme: ThemeData(
+        primarySwatch: Colors.blue,
+      ),
+      home: const LoginPage(),
     );
   }
 }
