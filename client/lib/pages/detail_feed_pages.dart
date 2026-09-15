@@ -1,20 +1,48 @@
 import 'package:flutter/material.dart';
-import '../models/post_model.dart'; 
+import '../models/post_model.dart';
+import 'edit_post_pages.dart';
 
-class DetailPostPage extends StatelessWidget {
+class DetailPostPage extends StatefulWidget {
   final Post post;
 
   const DetailPostPage({Key? key, required this.post}) : super(key: key);
 
   @override
+  State<DetailPostPage> createState() => _DetailPostPageState();
+}
+
+class _DetailPostPageState extends State<DetailPostPage> {
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF9FAFB), // Warna background abu-abu sangat muda
+      backgroundColor: const Color(0xFFF9FAFB),
       appBar: AppBar(
         title: const Text('Detail Artikel'),
         backgroundColor: Colors.white,
         foregroundColor: const Color(0xFF003875),
         elevation: 1,
+        // TOMBOL EDIT DITARUH DI SINI (BARIS 19)
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.edit),
+            onPressed: () async {
+              // Menuju ke halaman edit dan menunggu data balikan
+              final updatedPost = await Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => EditPostPage(post: widget.post),
+                ),
+              );
+
+              // Jika ada data perubahan, refresh halaman detail
+              if (updatedPost != null) {
+                setState(() {
+                  // Otomatis memperbarui tampilan dengan data baru
+                });
+              }
+            },
+          ),
+        ],
       ),
       body: SingleChildScrollView(
         child: Column(
@@ -27,18 +55,21 @@ class DetailPostPage extends StatelessWidget {
               decoration: BoxDecoration(
                 color: const Color(0xFF0066FF).withOpacity(0.1),
               ),
-              child: post.imageUrl != null && post.imageUrl!.isNotEmpty
+              child:
+                  widget.post.imageUrl != null &&
+                      widget.post.imageUrl!.isNotEmpty
                   ? Image.network(
-                      post.imageUrl!,
+                      widget.post.imageUrl!,
                       width: double.infinity,
                       fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) => const Center(
-                        child: Icon(
-                          Icons.menu_book,
-                          color: Color(0xFF003875),
-                          size: 80,
-                        ),
-                      ),
+                      errorBuilder: (context, error, stackTrace) =>
+                          const Center(
+                            child: Icon(
+                              Icons.menu_book,
+                              color: Color(0xFF003875),
+                              size: 80,
+                            ),
+                          ),
                     )
                   : const Center(
                       child: Icon(
@@ -59,13 +90,17 @@ class DetailPostPage extends StatelessWidget {
                   Row(
                     children: [
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 4,
+                        ),
                         decoration: BoxDecoration(
                           color: const Color(0xFF0066FF).withOpacity(0.1),
                           borderRadius: BorderRadius.circular(6),
                         ),
                         child: Text(
-                          post.category?.categoryName ?? 'Tanpa Kategori',
+                          widget.post.category?.categoryName ??
+                              'Tanpa Kategori',
                           style: const TextStyle(
                             fontSize: 12,
                             color: Color(0xFF003875),
@@ -75,13 +110,16 @@ class DetailPostPage extends StatelessWidget {
                       ),
                       const SizedBox(width: 8),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 4,
+                        ),
                         decoration: BoxDecoration(
                           color: Colors.amber.shade100,
                           borderRadius: BorderRadius.circular(6),
                         ),
                         child: Text(
-                          post.status, // Misal: "Tersedia"
+                          widget.post.status,
                           style: TextStyle(
                             fontSize: 12,
                             color: Colors.amber.shade900,
@@ -95,7 +133,7 @@ class DetailPostPage extends StatelessWidget {
 
                   // Judul Artikel
                   Text(
-                    post.title,
+                    widget.post.title,
                     style: const TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
@@ -106,13 +144,10 @@ class DetailPostPage extends StatelessWidget {
 
                   // Info Tambahan (Tanggal)
                   Text(
-                    'Dibuat pada: ${post.createdAt}',
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: Colors.grey.shade600,
-                    ),
+                    'Dibuat pada: ${widget.post.createdAt}',
+                    style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
                   ),
-                  
+
                   const Padding(
                     padding: EdgeInsets.symmetric(vertical: 16.0),
                     child: Divider(height: 1, thickness: 1),
@@ -120,10 +155,10 @@ class DetailPostPage extends StatelessWidget {
 
                   // Isi Artikel
                   Text(
-                    post.content,
+                    widget.post.content,
                     style: const TextStyle(
                       fontSize: 16,
-                      height: 1.6, // Jarak antar baris teks biar nyaman dibaca
+                      height: 1.6,
                       color: Colors.black87,
                     ),
                   ),
