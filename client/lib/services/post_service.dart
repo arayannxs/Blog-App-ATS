@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../models/post_model.dart';
+import 'dart:typed_data';
 
 class PostService {
   // Gunakan 10.0.2.2 untuk Android Emulator
@@ -24,13 +25,15 @@ class PostService {
   }
 
   // Create Post (Multipart)
+  // Create Post (Multipart)
   Future<bool> createPost({
     required String token,
     required String userId,
     required String title,
     required String content,
     required String categoryId,
-    String? imagePath,
+    Uint8List? imageBytes, // <--- Ganti imagePath jadi imageBytes
+    String? imageName,     // <--- Tambahkan imageName
   }) async {
     try {
       var request = http.MultipartRequest('POST', Uri.parse(baseUrl));
@@ -41,13 +44,27 @@ class PostService {
       request.fields['content'] = content;
       request.fields['categoryId'] = categoryId;
 
-      if (imagePath != null) {
-        request.files.add(await http.MultipartFile.fromPath('image', imagePath));
+      // Logika Upload Gambar via Bytes (Aman untuk Flutter Web & Mobile)
+      if (imageBytes != null && imageName != null) {
+        request.files.add(
+          http.MultipartFile.fromBytes(
+            'image', // Sesuaikan dengan key multer backend (biasanya 'image' atau 'file')
+            imageBytes,
+            filename: imageName,
+          ),
+        );
       }
 
-      var response = await request.send();
+      var streamedResponse = await request.send();
+      var response = await http.Response.fromStream(streamedResponse);
+
+      // Print untuk debug respons backend di Console
+      print('STATUS CODE: ${response.statusCode}');
+      print('RESPONSE BODY: ${response.body}');
+
       return response.statusCode == 201 || response.statusCode == 200;
     } catch (e) {
+      print('ERROR CREATE POST: $e');
       return false;
     }
   }

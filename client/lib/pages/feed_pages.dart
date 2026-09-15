@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../services/post_service.dart';
 import '../models/post_model.dart';
 import 'create_post_pages.dart';
+import 'detail_feed_pages.dart';
 
 class FeedPage extends StatefulWidget {
   const FeedPage({super.key});
@@ -78,7 +79,10 @@ class _FeedPageState extends State<FeedPage> {
               TextField(
                 decoration: InputDecoration(
                   hintText: 'Cari buku, jurnal, atau artikel...',
-                  hintStyle: textStyleWorkSans.copyWith(color: Colors.grey.shade500, fontSize: 14),
+                  hintStyle: textStyleWorkSans.copyWith(
+                    color: Colors.grey.shade500,
+                    fontSize: 14,
+                  ),
                   prefixIcon: const Icon(Icons.search, color: Colors.grey),
                   filled: true,
                   fillColor: Colors.white,
@@ -109,9 +113,7 @@ class _FeedPageState extends State<FeedPage> {
                   if (snapshot.connectionState == ConnectionState.waiting) {
                     return const Padding(
                       padding: EdgeInsets.symmetric(vertical: 40),
-                      child: Center(
-                        child: CircularProgressIndicator(),
-                      ),
+                      child: Center(child: CircularProgressIndicator()),
                     );
                   } else if (snapshot.hasError) {
                     return Padding(
@@ -123,9 +125,7 @@ class _FeedPageState extends State<FeedPage> {
                   } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
                     return const Padding(
                       padding: EdgeInsets.symmetric(vertical: 40),
-                      child: Center(
-                        child: Text('Belum ada koleksi tersedia.'),
-                      ),
+                      child: Center(child: Text('Belum ada koleksi tersedia.')),
                     );
                   }
 
@@ -140,58 +140,121 @@ class _FeedPageState extends State<FeedPage> {
 
                       return Card(
                         margin: const EdgeInsets.only(bottom: 12),
+                        elevation: 2,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
-                        elevation: 2,
-                        child: ListTile(
-                          contentPadding: const EdgeInsets.all(12),
-                          leading: Container(
-                            width: 50,
-                            height: 70,
-                            decoration: BoxDecoration(
-                              color: const Color(0xFF0066FF).withOpacity(0.2),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: const Icon(Icons.menu_book, color: Color(0xFF003875)),
-                          ),
-                          title: Text(
-                            item.title, // Dynamic Title
-                            style: textStyleWorkSans.copyWith(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 14,
-                            ),
-                          ),
-                          subtitle: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const SizedBox(height: 4),
-                              Text(
-                                item.content, // Dynamic Content
-                                style: textStyleWorkSans.copyWith(fontSize: 12),
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
+                        child: InkWell(
+                          onTap: () {
+                            // Navigasi ke halaman detail dengan data post
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => DetailPostPage(post: item),
                               ),
-                              const SizedBox(height: 6),
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                                decoration: BoxDecoration(
-                                  color: Colors.amber.shade100,
-                                  borderRadius: BorderRadius.circular(4),
-                                ),
-                                child: Text(
-                                  'Tersedia',
-                                  style: textStyleWorkSans.copyWith(
-                                    fontSize: 10,
-                                    color: Colors.amber.shade900,
-                                    fontWeight: FontWeight.w600,
+                            );
+                          },
+                          borderRadius: BorderRadius.circular(12),
+                          child: Padding(
+                            padding: const EdgeInsets.all(12),
+                            child: Row(
+                              children: [
+                                // 1. Gambar Sampul / Icon Buku
+                                Container(
+                                  width: 65,
+                                  height: 85,
+                                  decoration: BoxDecoration(
+                                    color: const Color(
+                                      0xFF0066FF,
+                                    ).withOpacity(0.2),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: ClipRRect(
+                                    borderRadius: BorderRadius.circular(8),
+                                    child:
+                                        item.imageUrl != null &&
+                                            item.imageUrl!.isNotEmpty
+                                        ? Image.network(
+                                            item.imageUrl!,
+                                            width: 65,
+                                            height: 85,
+                                            fit: BoxFit.cover,
+                                            errorBuilder:
+                                                (context, error, stackTrace) =>
+                                                    const Icon(
+                                                      Icons.menu_book,
+                                                      color: Color(0xFF003875),
+                                                      size: 30,
+                                                    ),
+                                          )
+                                        : const Icon(
+                                            Icons.menu_book,
+                                            color: Color(0xFF003875),
+                                            size: 30,
+                                          ),
                                   ),
                                 ),
-                              ),
-                            ],
+                                const SizedBox(width: 12),
+
+                                // 2. Judul, Content, & Tag Status
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        item.title,
+                                        style: textStyleWorkSans.copyWith(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        item.content,
+                                        style: textStyleWorkSans.copyWith(
+                                          fontSize: 12,
+                                          color: Colors.grey.shade600,
+                                        ),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                      const SizedBox(height: 8),
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 8,
+                                          vertical: 2,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: Colors.amber.shade100,
+                                          borderRadius: BorderRadius.circular(
+                                            4,
+                                          ),
+                                        ),
+                                        child: Text(
+                                          'Tersedia',
+                                          style: textStyleWorkSans.copyWith(
+                                            fontSize: 10,
+                                            color: Colors.amber.shade900,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+
+                                // 3. Panah Kanan
+                                const Icon(
+                                  Icons.arrow_forward_ios,
+                                  size: 16,
+                                  color: Colors.grey,
+                                ),
+                              ],
+                            ),
                           ),
-                          trailing: const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
-                          onTap: () {},
                         ),
                       );
                     },
@@ -209,9 +272,7 @@ class _FeedPageState extends State<FeedPage> {
           // Pindah ke halaman CreatePostPage
           final refreshed = await Navigator.push(
             context,
-            MaterialPageRoute(
-              builder: (context) => const CreatePostPage(),
-            ),
+            MaterialPageRoute(builder: (context) => const CreatePostPage()),
           );
 
           // Jika berhasil submit (mengembalikan true), refresh daftar postingan
