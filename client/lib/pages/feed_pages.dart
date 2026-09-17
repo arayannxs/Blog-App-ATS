@@ -145,14 +145,25 @@ class _FeedPageState extends State<FeedPage> {
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: InkWell(
-                          onTap: () {
+                          onTap: () async {
                             // Navigasi ke halaman detail dengan data post
-                            Navigator.push(
+                            final result = await Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) => DetailPostPage(post: item),
+                                builder: (context) =>
+                                    DetailPostPage(post: item),
                               ),
                             );
+
+                            // Jika menerima perintah delete dari Detail Page
+                            if (result != null &&
+                                result['action'] == 'delete') {
+                              setState(() {
+                                posts.remove(
+                                  item,
+                                ); // Menghapus item dari daftar postingan
+                              });
+                            }
                           },
                           borderRadius: BorderRadius.circular(12),
                           child: Padding(
