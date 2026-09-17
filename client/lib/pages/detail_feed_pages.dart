@@ -23,6 +23,7 @@ class _DetailPostPageState extends State<DetailPostPage> {
         elevation: 1,
         // TOMBOL EDIT DITARUH DI SINI (BARIS 19)
         actions: [
+          // 1. TOMBOL EDIT
           IconButton(
             icon: const Icon(Icons.edit),
             onPressed: () async {
@@ -40,6 +41,55 @@ class _DetailPostPageState extends State<DetailPostPage> {
                   // Otomatis memperbarui tampilan dengan data baru
                 });
               }
+            },
+          ),
+
+          // 2. TOMBOL DELETE
+          IconButton(
+            icon: const Icon(Icons.delete, color: Colors.red),
+            onPressed: () {
+              // Tampilkan Dialog Konfirmasi Hapus
+              showDialog(
+                context: context,
+                builder: (BuildContext ctx) {
+                  return AlertDialog(
+                    title: const Text('Hapus Postingan'),
+                    content: const Text(
+                      'Apakah kamu yakin ingin menghapus postingan ini?',
+                    ),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(ctx), // Batal hapus
+                        child: const Text('Batal'),
+                      ),
+                      ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.red,
+                        ),
+                        onPressed: () {
+                          Navigator.pop(ctx); // Tutup Dialog Konfirmasi
+
+                          // Kembali ke Feed Page dengan membawa perintah 'delete'
+                          Navigator.pop(context, {
+                            'action': 'delete',
+                            'post': widget.post,
+                          });
+
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Postingan berhasil dihapus!'),
+                            ),
+                          );
+                        },
+                        child: const Text(
+                          'Hapus',
+                          style: TextStyle(color: Colors.white),
+                        ),
+                      ),
+                    ],
+                  );
+                },
+              );
             },
           ),
         ],
