@@ -3,6 +3,7 @@ import { drizzle } from "drizzle-orm/mysql2";
 import mysql from "mysql2/promise";
 import * as schema from "./config/schema";
 import cors from "cors";
+import dotenv from "dotenv";
 
 import authRouter from "./routes/auth/auth.route";
 import postsRouter from "./routes/posts/posts.route";
@@ -12,21 +13,19 @@ import categoryRouter from "./routes/categories/category.route";
 const app = express();
 const port = 5000;
 
+dotenv.config();
+
 const poolConnection = mysql.createPool({
-  host: "***REDACTED***",
-  user: "***REDACTED***",
-  password: "***REDACTED***",
-  database: "***REDACTED***",
-  port: ***REDACTED***,
+  host: process.env.DB_HOST,
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  database: process.env.DB_NAME,
+  port: Number(process.env.DB_PORT) || ***REDACTED***,
 });
 
 export const db = drizzle(poolConnection, { schema, mode: "default" });
 
-app.use(
-  cors({
-    origin: "http://localhost:3000",
-  }),
-);
+app.use(cors());
 
 app.use(express.json());
 
